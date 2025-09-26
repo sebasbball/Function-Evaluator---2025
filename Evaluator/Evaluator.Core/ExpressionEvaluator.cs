@@ -8,57 +8,81 @@ public class ExpressionEvaluator
         return Calulate(postfix);
     }
 
-    private static string InfixToPostfix(string infix)
+    private static Queue<string> InfixToPostfix(string infix)
     {
-        var stack = new Stack<char>();
-        var postfix = string.Empty;
-        foreach (char item in infix)
+        var stack = new Stack<string>();
+        var postfix = new Queue<string>();
+        var tokens = TokenizeExpression(infix);
+
+        foreach (string token in tokens)
         {
-            if (IsOperator(item))
+            if (IsOperator(token))
             {
-                if (item == ')')
+                if (token == ')')
                 {
-                    do
+                    while (stack.Count > 0 && stack.Peek() != '(')
                     {
-                        postfix += stack.Pop();
-                    } while (stack.Peek() != '(');
-                    stack.Pop();
+                        postfix.Enqueue(stack.Pop());
+                    }
+                    if (stack.Count > 0)
+                        stack.Pop(); // Remove '('
                 }
                 else
                 {
-                    if (stack.Count > 0)
+                    while (stack.Count > 0 &&
+                        PriorityInfix(token) <= PriorityStack(stack.Peek()))
                     {
-                        if (PriorityInfix(item) > PriorityStack(stack.Peek()))
-                        {
-                            stack.Push(item);
-                        }
-                        else
-                        {
-                            postfix += stack.Pop();
-                            stack.Push(item);
-                        }
+                        postfix.Enqueue(stack.Pop());
                     }
-                    else
-                    {
-                        stack.Push(item);
-                    }
+                    stack.Push(token);
                 }
             }
             else
             {
-                postfix += item;
+                postfix.Enqueue(token);
             }
         }
+
         while (stack.Count > 0)
         {
-            postfix += stack.Pop();
+            postfix.Enqueue(stack.Pop());
         }
         return postfix;
     }
 
-    private static bool IsOperator(char item) => item is '^' or '/' or '*' or '%' or '+' or '-' or '(' or ')';
+    private static List<string> TokenizeExpression(string infix)
+    {
+        var tokens = new List<string>();
+        var currentNumber = string.Empty;
 
-    private static int PriorityInfix(char op) => op switch
+        foreach (char c in infix)
+        {
+            if (char.IsDigit(c) || c == '.')
+            {
+                currentNumber += c;
+            }
+            else if (IsOperator(c.ToString()))
+            {
+                if (!string.IsNullOrEmpty(currentNumber))
+                {
+                    tokens.Add(currentNumber);
+                    currentNumber = string.Empty;
+                }
+                tokens.Add(c.ToString());
+            }
+        }
+
+        if (!string.IsNullOrEmpty(currentNumber))
+        {
+            tokens.Add(currentNumber);
+        }
+
+        return tokens;
+    }
+
+    private static bool IsOperator(string token) => token is "^" or "/" or "*" or "%" or "+" or "-" or "(" or ")";
+
+    private static int PriorityInfix(string op) => op switch
     {
         '^' => 4,
         '*' or '/' or '%' => 2,
@@ -76,26 +100,30 @@ public class ExpressionEvaluator
         _ => throw new Exception("Invalid expression."),
     };
 
-    private static double Calulate(string postfix)
+    private static double Calulate(Queue<string> postfix)
     {
         var stack = new Stack<double>();
-        foreach (char item in postfix)
+
+        while (postfix.Count > 0)
         {
-            if (IsOperator(item))
+            string token = postfix.Dequeue();
+
+            if (IsOperator(token))
             {
                 var op2 = stack.Pop();
                 var op1 = stack.Pop();
-                stack.Push(Calulate(op1, item, op2));
+                stack.Push(Calulate(op1, token, op2));
             }
             else
             {
-                stack.Push(Convert.ToDouble(item.ToString()));
+                stack.Push(Convert.ToDouble(token));
             }
         }
+
         return stack.Peek();
     }
 
-    private static double Calulate(double op1, char item, double op2) => item switch
+    private static double Calulate(double op1, string op, double op2) => op switch
     {
         '*' => op1 * op2,
         '/' => op1 / op2,
