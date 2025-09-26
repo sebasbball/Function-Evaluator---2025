@@ -18,9 +18,9 @@ public class ExpressionEvaluator
         {
             if (IsOperator(token))
             {
-                if (token == ')')
+                if (token == ")")
                 {
-                    while (stack.Count > 0 && stack.Peek() != '(')
+                    while (stack.Count > 0 && stack.Peek() != "(")
                     {
                         postfix.Enqueue(stack.Pop());
                     }
@@ -84,10 +84,10 @@ public class ExpressionEvaluator
 
     private static int PriorityInfix(string op) => op switch
     {
-        '^' => 4,
-        '*' or '/' or '%' => 2,
-        '-' or '+' => 1,
-        '(' => 5,
+        "^" => 4,
+        "*" or "/" or "%" => 2,
+        "-" or "+" => 1,
+        "(" => 5,
         _ => throw new Exception("Invalid expression."),
     };
 
@@ -125,11 +125,11 @@ public class ExpressionEvaluator
 
     private static double Calulate(double op1, string op, double op2) => op switch
     {
-        '*' => op1 * op2,
-        '/' => op1 / op2,
-        '^' => Math.Pow(op1, op2),
-        '+' => op1 + op2,
-        '-' => op1 - op2,
+        "*" => op1 * op2,
+        "/" => op1 / op2,
+        "^" => Math.Pow(op1, op2),
+        "+" => op1 + op2,
+        "-" => op1 - op2,
         _ => throw new Exception("Invalid expression."),
     };
 }
